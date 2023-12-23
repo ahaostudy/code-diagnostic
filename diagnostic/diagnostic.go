@@ -106,16 +106,15 @@ func (diag *Diag) Analyze(pnc, stack string, funs []*Function) {
 		case bigmodel.TypeData:
 			print(ans.Content)
 		case bigmodel.TypeDone:
-			close(answer)
 			finish = true
 		case bigmodel.TypeError:
-			close(answer)
 			log.Fatalln("chatgpt response error:", ans.Content)
 		default:
-			close(answer)
 			log.Fatalln("chatgpt response unknown type:", ans.Type)
 		}
 	}
+	close(answer)
+	println()
 }
 
 func buildFuncListDescription(funs []*Function) string {
@@ -129,7 +128,7 @@ func buildFuncListDescription(funs []*Function) string {
 }
 
 func buildFileFunctionsDescription(file string, funs []*Function) string {
-	desc := strings.TrimPrefix(file, root) + ":\n```go\n"
+	desc := file + ":\n```go\n"
 	for _, f := range funs {
 		desc += f.Source + "\n"
 	}

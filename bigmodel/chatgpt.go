@@ -71,6 +71,7 @@ type chunk struct {
 		Delta struct {
 			Content string `json:"content"`
 		} `json:"delta"`
+		FinishReason string `json:"finish_reason"`
 	} `json:"choices"`
 }
 
@@ -100,8 +101,11 @@ func (gpt *ChatGPT) Chat(query string) chan Result {
 		}
 		defer resp.Body.Close()
 
+		// TODO: response status exception
+
 		// read response stream data
-		buf := make([]byte, 4096)
+		buf := make([]byte, 1024)
+		var chunks, tmp string
 		for {
 			n, err := resp.Body.Read(buf)
 			if err == io.EOF {
@@ -113,23 +117,23 @@ func (gpt *ChatGPT) Chat(query string) chan Result {
 				return
 			}
 
-			chunks := string(buf[:n])
-			data := new(chunk)
-			for _, chunk := range strings.Split(chunks, "\n\n") {
-				if !strings.HasPrefix(chunk, "data: ") {
-					continue
-				}
-				chunk = strings.TrimPrefix(chunk, "data: ")
+			chunks, tmp = tmp+string(buf[:n]), ""
+			for _, chk := range strings.Split(chunks, "\n\n") {
+				chk = strings.TrimPrefix(chk, "data: ")
 
 				// done
-				if chunk == "[DONE]" {
+				if chk == "[DONE]" {
 					out <- Result{Type: TypeDone}
 					return
 				}
-
-				err := json.Unmarshal([]byte(chunk), data)
+				data := new(chunk)
+				err := json.Unmarshal([]byte(chk), data)
 				if err != nil {
-					out <- Result{Type: TypeError, Content: err.Error()}
+					tmp += chk
+					continue
+				}
+				if len(data.Choices) == 0 {
+					out <- Result{Type: TypeError, Content: "response data error"}
 					return
 				}
 				out <- Result{Type: TypeData, Content: data.Choices[0].Delta.Content}

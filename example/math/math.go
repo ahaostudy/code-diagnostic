@@ -32,5 +32,7 @@ func Mul(a, b int) int {
 }
 
 func Div(a, b int) int {
-	return a / b
+	return func(a, b int) int {
+		return a / b
+	}(a, b)
 }

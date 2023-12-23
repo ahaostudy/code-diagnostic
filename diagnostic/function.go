@@ -68,16 +68,22 @@ func ReadFuncSource(frame *runtime.Frame) *Function {
 		}
 	}
 
-	log.Fatalln("function source code not found")
+	log.Printf("the source code of function %s cannot be found in %s", fun, file)
 	return nil
 }
 
 func GetFuncList(frames *runtime.Frames) (funs []*Function) {
+	set := map[string]struct{}{}
 	for {
 		frame, more := frames.Next()
 		if strings.HasPrefix(frame.File, root) {
-			fun := ReadFuncSource(&frame)
-			funs = append(funs, fun)
+			if _, ok := set[frame.Function]; !ok {
+				fun := ReadFuncSource(&frame)
+				if fun != nil {
+					funs = append(funs, fun)
+					set[frame.Function] = struct{}{}
+				}
+			}
 		}
 		if !more {
 			break

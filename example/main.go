@@ -23,9 +23,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ahaostudy/code-dignostic/bigmodel"
-	"github.com/ahaostudy/code-dignostic/diagnostic"
-	"github.com/ahaostudy/code-dignostic/example/math"
+	"github.com/ahaostudy/code-disgnostic/bigmodel"
+	"github.com/ahaostudy/code-disgnostic/diagnostic"
+	"github.com/ahaostudy/code-disgnostic/example/math"
 
 	"github.com/joho/godotenv"
 )

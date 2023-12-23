@@ -65,9 +65,9 @@ func (diag *Diag) Diagnostic() {
 	if r := recover(); r != nil {
 		pnc := fmt.Sprintf("%s", r)
 		stack := string(debug.Stack())
-		log.Println(fmt.Sprintf("diagnostic detected:\n\n\t%v\n\n\t%v",
+		log.Printf("diagnostic detected:\n\n\t%v\n\n\t%v",
 			pnc,
-			strings.ReplaceAll(stack, "\n", "\n\t")),
+			strings.ReplaceAll(stack, "\n", "\n\t"),
 		)
 
 		frames := getCallersFrames(defaultMaxStack)

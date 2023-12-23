@@ -26,11 +26,13 @@ header:
     - '.git/'
     - '.github/'
     - '.gitignore'
+    - '.licenserc.yaml'
+    - 'LICENSE'
     - '**/**.md'
+    - '**/**.yml'
     - '**/**.mod'
     - '**/**.sum'
-    - '**/**.env'
-    - 'LICENSE'
+    - '**/.env'
 
   comment: on-failure
 

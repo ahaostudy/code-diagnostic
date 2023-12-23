@@ -28,7 +28,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/ahaostudy/code-dignostic/utils"
+	"github.com/ahaostudy/code-disgnostic/utils"
 )
 
 type Function struct {

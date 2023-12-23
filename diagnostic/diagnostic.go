@@ -27,7 +27,7 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/ahaostudy/code-dignostic/bigmodel"
+	"github.com/ahaostudy/code-disgnostic/bigmodel"
 )
 
 const (

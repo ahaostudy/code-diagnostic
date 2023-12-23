@@ -25,7 +25,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/ahaostudy/code-dignostic/utils"
+	"github.com/ahaostudy/code-disgnostic/utils"
 )
 
 // ChatGPT big model

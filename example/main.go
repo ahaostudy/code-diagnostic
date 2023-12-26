@@ -20,12 +20,10 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/ahaostudy/code-diagnostic/bigmodel"
 	"github.com/ahaostudy/code-diagnostic/diagnostic"
 	"github.com/ahaostudy/code-diagnostic/example/math"
+	"os"
 
 	"github.com/joho/godotenv"
 )
@@ -44,15 +42,23 @@ func init() {
 }
 
 func main() {
-	// initialize a diagnostic tool to automatically capture and analyze program exceptions
-	defer diagnostic.NewDiag(
+	// initialize a diagnostic tool
+	diag := diagnostic.NewDiag(
 		// use the ChatGPT model
 		bigmodel.NewChatGPT(apiKey, bigmodel.WithSpecifyBaseURL(baseURL)),
 		// use chinese
 		diagnostic.WithUseChinese(),
-	).Diagnostic()
+	)
 
-	var a, b int
-	a = 20
-	fmt.Println(math.Div(a, b))
+	// automatically capture and analyze program exceptions
+	defer diag.Diagnostic()
+
+	a, b := 10, 0
+	//math.Div(a, b)
+
+	_, err := math.DivError(a, b)
+	if err != nil {
+		// custom breakpoint analysis
+		diag.BreakPoint(err.Error())
+	}
 }

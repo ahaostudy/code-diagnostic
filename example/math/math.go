@@ -19,6 +19,8 @@
 
 package math
 
+import "fmt"
+
 func Add(a, b int) int {
 	return a + b
 }
@@ -35,4 +37,11 @@ func Div(a, b int) int {
 	return func(a, b int) int {
 		return a / b
 	}(a, b)
+}
+
+func DivError(a, b int) (int, error) {
+	if b == 0 {
+		return 0, fmt.Errorf("the divisor can not be zero")
+	}
+	return a / b, nil
 }

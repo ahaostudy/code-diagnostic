@@ -21,13 +21,12 @@ package diagnostic
 
 import (
 	"fmt"
+	"github.com/ahaostudy/code-diagnostic/bigmodel"
 	"log"
 	"os"
 	"runtime"
 	"runtime/debug"
 	"strings"
-
-	"github.com/ahaostudy/code-diagnostic/bigmodel"
 )
 
 const (
@@ -69,38 +68,36 @@ func (diag *Diag) Diagnostic() {
 			pnc,
 			strings.ReplaceAll(stack, "\n", "\n\t"),
 		)
-
 		frames := getCallersFrames(defaultMaxStack)
-		funcList := GetFuncList(frames)
-		diag.Analyze(pnc, stack, funcList)
+		funs := GetFuncList(frames)
+		diag.analyze(pnc, stack, funs)
 	}
 }
 
-func getCallersFrames(max int) *runtime.Frames {
-	pc := make([]uintptr, max)
-	// remove the call stack of diagnostic package
-	n := runtime.Callers(4, pc)
-	pc = pc[:n]
-	return runtime.CallersFrames(pc)
+func (diag *Diag) BreakPoint(pnc string) {
+	stack := string(debug.Stack())
+	log.Printf("diagnostic detected:\n\n\t%v\n\n\t%v",
+		pnc,
+		strings.ReplaceAll(stack, "\n", "\n\t"),
+	)
+	frames := getCallersFrames(defaultMaxStack)
+	funs := GetFuncList(frames)
+	diag.analyze(pnc, stack, funs)
 }
 
-func (diag *Diag) Analyze(pnc, stack string, funs []*Function) {
-	funcListDescription := buildFuncListDescription(funs)
-
-	var query string
-	query += "The following error occurred in the current program: \n```\n" + pnc + "\n```\n\n"
-	query += "Here is its call stack: \n```\n" + stack + "```\n\n"
-	query += "The source code list is as follows:\n" + funcListDescription + "\n"
+func (diag *Diag) analyze(pnc, stack string, funs []*Function) {
+	var prompt string
+	prompt += "The following error occurred in the current program: \n```\n" + pnc + "\n```\n\n"
+	prompt += "Here is its call stack: \n```\n" + stack + "```\n\n"
+	prompt += "The source code list is as follows:\n" + buildFuncListDescription(funs) + "\n"
 	if diag.useChinese {
-		query += "Please reply in Chinese to help analyze the cause of the error and solve it!"
+		prompt += "Please reply in Chinese to help analyze the cause of the error and solve it!"
 	} else {
-		query += "Please help analyze the cause of the error and solve it!"
+		prompt += "Please help analyze the cause of the error and solve it!"
 	}
 
-	answer := diag.BigModel.Chat(query)
-	finish := false
-
-	for !finish {
+	answer := diag.BigModel.Chat(prompt)
+	for finish := false; !finish; {
 		ans := <-answer
 		switch ans.Type {
 		case bigmodel.TypeData:
@@ -115,6 +112,13 @@ func (diag *Diag) Analyze(pnc, stack string, funs []*Function) {
 	}
 	close(answer)
 	println()
+}
+
+func getCallersFrames(max int) *runtime.Frames {
+	pc := make([]uintptr, max)
+	n := runtime.Callers(1, pc)
+	pc = pc[:n]
+	return runtime.CallersFrames(pc)
 }
 
 func buildFuncListDescription(funs []*Function) string {

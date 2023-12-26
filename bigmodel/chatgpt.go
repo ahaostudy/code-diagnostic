@@ -75,7 +75,7 @@ type chunk struct {
 	} `json:"choices"`
 }
 
-func (gpt *ChatGPT) Chat(query string) chan Result {
+func (gpt *ChatGPT) Chat(prompt string) chan Result {
 	out := make(chan Result)
 
 	go func() {
@@ -86,7 +86,7 @@ func (gpt *ChatGPT) Chat(query string) chan Result {
 			"messages": []map[string]string{
 				{
 					"role":    "user",
-					"content": query,
+					"content": prompt,
 				},
 			},
 		})
@@ -104,7 +104,7 @@ func (gpt *ChatGPT) Chat(query string) chan Result {
 		// TODO: response status exception
 
 		// read response stream data
-		buf := make([]byte, 1024)
+		buf := make([]byte, 4096)
 		var chunks, tmp string
 		for {
 			n, err := resp.Body.Read(buf)

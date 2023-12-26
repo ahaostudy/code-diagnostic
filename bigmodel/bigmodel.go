@@ -22,7 +22,7 @@ package bigmodel
 // BigModel interface
 type BigModel interface {
 	// Chat Receive a query for large model calls and write the output results to the Result channel in real time
-	Chat(query string) chan Result
+	Chat(string) chan Result
 }
 
 type Result struct {

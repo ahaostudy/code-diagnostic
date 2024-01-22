@@ -21,33 +21,27 @@ package diagnostic
 
 import (
 	"fmt"
-	"github.com/ahaostudy/code-diagnostic/bigmodel"
 	"log"
-	"os"
 	"runtime"
 	"runtime/debug"
 	"strings"
+
+	"github.com/ahaostudy/code-diagnostic/bigmodel"
+	"github.com/ahaostudy/code-diagnostic/parse"
+	"github.com/ahaostudy/code-diagnostic/web"
 )
 
 const (
 	defaultMaxStack = 1024
+	defaultWebPort  = 5789
 )
-
-var root string
-
-func init() {
-	wd, err := os.Getwd()
-	if err != nil {
-		log.Fatalln("get working path failed:", err.Error())
-		return
-	}
-	root = wd
-}
 
 type Diag struct {
 	BigModel bigmodel.BigModel
 
 	useChinese bool
+	useWeb     bool
+	webPort    int
 }
 
 func NewDiag(bm bigmodel.BigModel, opts ...Option) *Diag {
@@ -57,6 +51,9 @@ func NewDiag(bm bigmodel.BigModel, opts ...Option) *Diag {
 	for _, opt := range opts {
 		opt(d)
 	}
+	if d.webPort == 0 {
+		d.webPort = defaultWebPort
+	}
 	return d
 }
 
@@ -64,39 +61,54 @@ func (diag *Diag) Diagnostic() {
 	if r := recover(); r != nil {
 		pnc := fmt.Sprintf("%s", r)
 		stack := string(debug.Stack())
-		log.Printf("diagnostic detected:\n\n\t%v\n\n\t%v",
-			pnc,
-			strings.ReplaceAll(stack, "\n", "\n\t"),
-		)
 		frames := getCallersFrames(defaultMaxStack)
-		funs := GetFuncList(frames)
-		diag.analyze(pnc, stack, funs)
+		diag.diagnostic(pnc, stack, frames)
 	}
 }
 
 func (diag *Diag) BreakPoint(pnc string) {
 	stack := string(debug.Stack())
+	frames := getCallersFrames(defaultMaxStack)
+	diag.diagnostic(pnc, stack, frames)
+}
+
+func (diag *Diag) diagnostic(pnc, stack string, frames *runtime.Frames) {
 	log.Printf("diagnostic detected:\n\n\t%v\n\n\t%v",
 		pnc,
 		strings.ReplaceAll(stack, "\n", "\n\t"),
 	)
-	frames := getCallersFrames(defaultMaxStack)
-	funs := GetFuncList(frames)
-	diag.analyze(pnc, stack, funs)
+	localFuns := parse.GetFuncList(frames)
+	if !diag.useWeb {
+		diag.analyze(pnc, stack, localFuns)
+	} else {
+		stackTraces := parse.StackTraces([]byte(stack))
+		funs := parse.GetFuncListWithStackTraces(stackTraces)
+		web.InitConfig(&web.Config{
+			Panic:          pnc,
+			Stack:          stack,
+			LocalFunctions: localFuns,
+			Functions:      funs,
+			BigModel:       diag.BigModel,
+			UseChinese:     diag.useChinese,
+		})
+		if err := web.Run(diag.webPort); err != nil {
+			log.Fatalln("web run error:", err)
+		}
+	}
 }
 
-func (diag *Diag) analyze(pnc, stack string, funs []*Function) {
-	var prompt string
-	prompt += "The following error occurred in the current program: \n```\n" + pnc + "\n```\n\n"
-	prompt += "Here is its call stack: \n```\n" + stack + "```\n\n"
-	prompt += "The source code list is as follows:\n" + buildFuncListDescription(funs) + "\n"
+func (diag *Diag) analyze(pnc, stack string, funs []*parse.Function) {
+	var msg string
+	msg += "The following error occurred in the current program: \n```\n" + pnc + "\n```\n\n"
+	msg += "Here is its call stack: \n```\n" + stack + "```\n\n"
+	msg += "The source code list is as follows:\n" + parse.BuildFuncListDescription(funs) + "\n"
 	if diag.useChinese {
-		prompt += "Please reply in Chinese to help analyze the cause of the error and solve it!"
+		msg += "Please reply in Chinese to help analyze the cause of the error and solve it!"
 	} else {
-		prompt += "Please help analyze the cause of the error and solve it!"
+		msg += "Please help analyze the cause of the error and solve it!"
 	}
 
-	answer := diag.BigModel.Chat(prompt)
+	answer := diag.BigModel.Chat(bigmodel.Messages(bigmodel.UserMessage(msg)))
 	for finish := false; !finish; {
 		ans := <-answer
 		switch ans.Type {
@@ -119,23 +131,4 @@ func getCallersFrames(max int) *runtime.Frames {
 	n := runtime.Callers(1, pc)
 	pc = pc[:n]
 	return runtime.CallersFrames(pc)
-}
-
-func buildFuncListDescription(funs []*Function) string {
-	fset := MakeFileFuncSet(funs)
-
-	var desc string
-	for file, fs := range fset {
-		desc += buildFileFunctionsDescription(file, fs)
-	}
-	return desc
-}
-
-func buildFileFunctionsDescription(file string, funs []*Function) string {
-	desc := file + ":\n```go\n"
-	for _, f := range funs {
-		desc += f.Source + "\n"
-	}
-	desc += "```\n"
-	return desc
 }

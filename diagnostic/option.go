@@ -27,3 +27,15 @@ func WithUseChinese() Option {
 		diag.useChinese = true
 	}
 }
+
+func WithUseWeb() Option {
+	return func(diag *Diag) {
+		diag.useWeb = true
+	}
+}
+
+func WithSpecifyWebPort(port int) Option {
+	return func(diag *Diag) {
+		diag.webPort = port
+	}
+}

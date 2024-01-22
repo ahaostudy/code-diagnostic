@@ -17,29 +17,40 @@
  * limitations under the License.
  */
 
-package math
+package web
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+)
 
-func Add(a, b int) int {
-	return a + b
+type JSON map[string]any
+
+type Response struct {
+	StatusCode int    `json:"status_code"`
+	StatusMsg  string `json:"status_msg"`
+	Data       any    `json:"data"`
 }
 
-func Sub(a, b int) int {
-	return a - b
+func Success(w http.ResponseWriter, data any) {
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(Response{
+		StatusCode: 0,
+		StatusMsg:  "ok",
+		Data:       data,
+	})
 }
 
-func Mul(a, b int) int {
-	return a * b
+func Error(w http.ResponseWriter, err string) {
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(Response{
+		StatusCode: -1,
+		StatusMsg:  err,
+	})
 }
 
-func Div(a, b int) int {
-	return a / b
-}
-
-func DivError(a, b int) (int, error) {
-	if b == 0 {
-		return 0, fmt.Errorf("the divisor can not be zero")
-	}
-	return a / b, nil
+func Event(w http.ResponseWriter, event, data string) {
+	_, _ = fmt.Fprintf(w, "event:%s\ndata:%s\n\n", event, data)
+	w.(http.Flusher).Flush()
 }

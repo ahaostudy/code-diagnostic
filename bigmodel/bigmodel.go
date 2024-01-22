@@ -22,7 +22,7 @@ package bigmodel
 // BigModel interface
 type BigModel interface {
 	// Chat Receive a query for large model calls and write the output results to the Result channel in real time
-	Chat(string) chan Result
+	Chat(messages []*Message) chan Result
 }
 
 type Result struct {
@@ -35,3 +35,39 @@ const (
 	TypeDone
 	TypeError
 )
+
+type Message struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+const (
+	RoleUser      = "user"
+	RoleAssistant = "assistant"
+	RoleSystem    = "system"
+)
+
+func Messages(messages ...*Message) []*Message {
+	return messages
+}
+
+func UserMessage(msg string) *Message {
+	return &Message{
+		Role:    RoleUser,
+		Content: msg,
+	}
+}
+
+func SystemMessage(msg string) *Message {
+	return &Message{
+		Role:    RoleSystem,
+		Content: msg,
+	}
+}
+
+func AssistantMessage(msg string) *Message {
+	return &Message{
+		Role:    RoleAssistant,
+		Content: msg,
+	}
+}

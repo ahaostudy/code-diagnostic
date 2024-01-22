@@ -75,20 +75,15 @@ type chunk struct {
 	} `json:"choices"`
 }
 
-func (gpt *ChatGPT) Chat(prompt string) chan Result {
+func (gpt *ChatGPT) Chat(messages []*Message) chan Result {
 	out := make(chan Result)
 
 	go func() {
 		req := utils.NewRequest(gpt.url)
 		req.SetData(map[string]interface{}{
-			"model":  gpt.model,
-			"stream": true,
-			"messages": []map[string]string{
-				{
-					"role":    "user",
-					"content": prompt,
-				},
-			},
+			"model":    gpt.model,
+			"stream":   true,
+			"messages": messages,
 		})
 		req.SetHeader("Authorization", "Bearer "+gpt.apiKey)
 		req.SetHeader("Content-Type", "application/json")

@@ -17,29 +17,20 @@
  * limitations under the License.
  */
 
-package math
+package web
 
-import "fmt"
+import (
+	"net/http"
+	"path/filepath"
+)
 
-func Add(a, b int) int {
-	return a + b
-}
+func initRouter() {
+	http.Handle("/", HTMLHandlerFunc("index.html"))
 
-func Sub(a, b int) int {
-	return a - b
-}
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(filepath.Join(root, "static")))))
+	http.Handle("/files/", http.StripPrefix("/files/", http.FileServer(http.Dir("/"))))
 
-func Mul(a, b int) int {
-	return a * b
-}
-
-func Div(a, b int) int {
-	return a / b
-}
-
-func DivError(a, b int) (int, error) {
-	if b == 0 {
-		return 0, fmt.Errorf("the divisor can not be zero")
-	}
-	return a / b, nil
+	http.HandleFunc("/api/chat", Chat)
+	http.HandleFunc("/api/panic", GetPanic)
+	http.HandleFunc("/api/func/", GetFuncSource)
 }

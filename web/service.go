@@ -17,51 +17,23 @@
  * limitations under the License.
  */
 
-package main
+package web
 
 import (
-	"os"
-
 	"github.com/ahaostudy/code-diagnostic/bigmodel"
-	"github.com/ahaostudy/code-diagnostic/diagnostic"
-	"github.com/ahaostudy/code-diagnostic/example/math"
-
-	"github.com/joho/godotenv"
+	"github.com/ahaostudy/code-diagnostic/parse"
 )
 
-var (
-	baseURL string
-	apiKey  string
-)
-
-func init() {
-	_ = godotenv.Load("dev.env", ".env")
-
-	// set the base_url and api_key of ChatGPT
-	baseURL = os.Getenv("BASE_URL")
-	apiKey = os.Getenv("API_KEY")
-}
-
-func main() {
-	// initialize a diagnostic tool
-	diag := diagnostic.NewDiag(
-		// use the ChatGPT model
-		bigmodel.NewChatGPT(apiKey, bigmodel.WithSpecifyBaseURL(baseURL)),
-		// use chinese
-		diagnostic.WithUseChinese(),
-		// use web
-		diagnostic.WithUseWeb(),
-	)
-
-	a, b := 10, 0
-
-	// automatically capture and analyze program exceptions
-	defer diag.Diagnostic()
-	math.Div(a, b)
-
-	// custom breakpoint analysis
-	//_, err := math.DivError(a, b)
-	//if err != nil {
-	//	diag.BreakPoint(err.Error())
-	//}
+func ChatService(messages []*bigmodel.Message) chan bigmodel.Result {
+	var msg string
+	msg += "The following error occurred in the current program: \n```\n" + config.Panic + "\n```\n\n"
+	msg += "Here is its call stack: \n```\n" + config.Stack + "```\n\n"
+	msg += "The source code list is as follows:\n" + parse.BuildFuncListDescription(config.LocalFunctions) + "\n"
+	if config.UseChinese {
+		msg += "Please reply in Chinese to help analyze the cause of the error and solve it!"
+	} else {
+		msg += "Please help analyze the cause of the error and solve it!"
+	}
+	messages = append(bigmodel.Messages(bigmodel.SystemMessage(msg)), messages...)
+	return config.BigModel.Chat(messages)
 }

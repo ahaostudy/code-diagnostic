@@ -25,6 +25,7 @@ function initPanicDiv() {
         const panicTitleElement = document.getElementById('panic-title')
         const panicTracebackElement = document.getElementById('panic-traceback')
         panicTitleElement.innerText = data['panic']
+        document.title = data['panic']
 
         const hoverElement = createElement('div', 'panic-traceback-hover')
         const hoverElementPre = createElement('pre', 'panic-traceback-hover-pre')

@@ -31,7 +31,7 @@ type StackTrace struct {
 }
 
 func StackTraces(stack []byte) []*StackTrace {
-	regex := regexp.MustCompile(`(?m)(.*?)\(([^.]*?)\)\n\s+(.*?):(\d+)`)
+	regex := regexp.MustCompile(`(?m)(.*?)\((.*?)\)\n\s+(.*?):(\d+)`)
 	matches := regex.FindAllSubmatch(stack, -1)
 	var stackTraces []*StackTrace
 	for _, match := range matches {

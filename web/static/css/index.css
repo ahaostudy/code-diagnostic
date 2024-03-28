@@ -215,7 +215,6 @@ ol {
     flex-direction: column;
     align-items: center;
     overflow-y: auto;
-    border-bottom: 1px var(--md-code-border-color) solid;
 
     > * {
         padding: 20px 15%;
@@ -225,7 +224,7 @@ ol {
     .message {
         display: flex;
         flex-direction: column;
-        border-top: 1px var(--md-code-border-color) solid;
+        border-bottom: 1px var(--md-code-border-color) solid;
 
         p {
             color: var(--md-text-color);

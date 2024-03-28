@@ -68,7 +68,7 @@ ol {
 }
 
 #panic {
-    max-width: 400px;
+    width: 400px;
     height: 100vh;
     overflow-y: auto;
     box-shadow: rgba(99, 99, 99, 0.2) 0 2px 8px 0;
@@ -151,15 +151,19 @@ ol {
             }
 
             .panic-traceback-item-footer {
-                overflow-x: auto;
                 overflow-y: hidden;
                 transition: height .2s linear;
 
+                ::-webkit-scrollbar {
+                    display: none;
+                }
+
                 .panic-traceback-item-source {
-                    display: inline-flex;
                     flex-direction: column;
+                    width: 100%;
 
                     .panic-traceback-item-source-pre {
+                        overflow-x: auto;
                         border-radius: 0 0 6px 6px;
                     }
 
@@ -171,11 +175,12 @@ ol {
                 }
 
                 .panic-traceback-item-source-file {
-                    display: inline-block;
+                    overflow-x: auto;
+                    display: block;
                     border-top: 1px solid #cad1d9;
                     padding: 5px 10px;
                     font-size: 12px;
-                    white-space:nowrap;
+                    white-space: nowrap;
                 }
             }
 
@@ -196,6 +201,30 @@ ol {
         }
     }
 
+}
+
+#resize-trigger {
+    width: 7px;
+    height: 100vh;
+    background-color: #e5e6eb;
+    display: flex;
+    align-items: center;
+
+    #resize-trigger-icon {
+        width: 100%;
+        padding: 10px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        cursor: col-resize;
+
+        .resize-trigger-icon-dot {
+            width: 2px;
+            height: 2px;
+            background-color: #000;
+        }
+    }
 }
 
 #chat {

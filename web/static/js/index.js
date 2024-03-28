@@ -4,10 +4,12 @@ import {marked} from "./marked.esm.js";
 
 let messages = []
 let messagesDiv
+let appElement = document.getElementById("app")
 
 window.onload = () => {
     initHLJS()
     initPanicDiv()
+    initResizeTrigger()
     initMessages()
     initInput()
 }
@@ -31,15 +33,16 @@ function initPanicDiv() {
         const hoverElementPre = createElement('pre', 'panic-traceback-hover-pre')
         const hoverElementCode = createElement('code', 'panic-traceback-hover-code')
         const hoverElementFooter = createElement('div', 'panic-traceback-hover-footer')
-        let appElement = document.getElementById("app")
         hoverElementPre.append(hoverElementCode)
         hoverElement.append(hoverElementPre)
         hoverElement.append(hoverElementFooter)
         hoverElement.style.display = 'none'
         hoverElementCode.classList.add('language-go')
         appElement.append(hoverElement)
+        hoverElement.onmouseleave = (event) => {
+            hoverElement.style.display = 'none'
+        }
         appElement.onclick = (event) => {
-            let element = event.target
             for (let element = event.target; element.localName !== 'body'; element = element.parentElement) {
                 if (element.className === 'panic-traceback' || element.className === 'panic-traceback-hover') {
                     return
@@ -127,21 +130,56 @@ function initPanicDiv() {
             itemHeader.onmousemove = (event) => {
                 if (hoverTimeOut) clearTimeout(hoverTimeOut)
                 hoverTimeOut = setTimeout(function () {
-                    const status = JSON.parse(item.getAttribute('status'))
-                    if (status) return
                     hoverElementCode.innerHTML = func['source']
                     highlightElement(hoverElementCode, false, false)
                     hoverElementFooter.innerHTML = `${getBase(func['name'])} <i>(${getBase(func['file'])}:${func['line']})</i>`
                     hoverElement.style.left = event.pageX + 'px'
                     hoverElement.style.top = event.pageY + 'px'
                     hoverElement.style.display = 'unset'
-                }, 750);
+                }, 500);
             }
-            itemHeader.onmouseout = () => {
+            itemHeader.onmouseout = (event) => {
                 if (hoverTimeOut) clearTimeout(hoverTimeOut);
+                else if (!checkIn(event, hoverElement)) hoverElement.style.display = 'none'
             }
         }
     })
+}
+
+function checkIn(event, element) {
+    const x = Number(event.clientX)
+    const y = Number(event.clientY)
+
+    const div_x = Number(element.getBoundingClientRect().left)
+    const div_x_width = Number(
+        element.getBoundingClientRect().left + element.clientWidth
+    )
+
+    const div_y = Number(element.getBoundingClientRect().top)
+    const div_y_height = Number(
+        element.getBoundingClientRect().top + element.clientHeight
+    )
+
+    return x >= div_x && x <= div_x_width && y >= div_y && y <= div_y_height
+}
+
+function initResizeTrigger() {
+    const resizeTriggerIconElement = document.getElementById("resize-trigger-icon");
+    const panicElement = document.getElementById("panic");
+
+    let moveStatus = false;
+    resizeTriggerIconElement.onmousedown = () => {
+        moveStatus = true;
+    }
+
+    appElement.onmousemove = (event) => {
+        if (!moveStatus) return;
+        panicElement.style.width = event.clientX + 'px';
+    }
+
+    appElement.onmouseup = () => {
+        moveStatus = false;
+    }
 }
 
 function initInput() {
